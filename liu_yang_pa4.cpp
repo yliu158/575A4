@@ -1,51 +1,50 @@
-#include <iostream>
-#include <vector>
-#include <set>
-#include <queue>
-#include <list>
-#include <iomanip>
-#include <limits.h>
-#include <utility>
-#include <algorithm>
+// name: Yang Liu
+// email: yliu158@binghamton.edu
+// b#: B00481024
+#include <iostream> // cout cin
+#include <vector> // heap_v pre forest etc
+#include <iomanip> // setw print in certain format
+#include <algorithm> // sort array
 
 using namespace std;
 
 vector<vector<int> > graph; // graph
-vector<pair<int, int> > heap_v;
-vector<int> pre;
-vector<int> forest;
+vector<pair<int, int> > heap_v; // all edges, first:vertice second:length
+vector<int> pre; // pre vertice of each vertice
+vector<int> forest; // parent of each vertice for kruskal
 struct edge{
   int length;
   int v;
   int u;
   bool operator<(const edge & r) const {return length < r.length;}
 };
-vector<edge> weight;
-vector<edge> solution;
+vector<edge> weight; // sort edge based on lenght in ascending order
+vector<edge> solution; // solution of kruskal
 
 
 //declaration of functions
 void execute(); // all executable lines
 void prepareGraph(); // prepare the graph
-void prim(); // Minimum spenning tree
-void miniHeapify_Prim(const int i, int n); // miniHeapify_Prim the cost
-pair<int, int> removeMini_Prim();
-void kruskal();
-int find_Kruskal(int vertice);
-void union_Kruskal(int v, int u);
 void printGraph(); // print graph using list
-void printCost_Prim();
-void printTree_Prim();
-void printEdges_Kruskal();
-void printSolution();
 
-int main(int argc, char const *argv[]) {
+void prim(); // Minimum spanning tree using prim algorithm
+void miniHeapify_Prim(const int i, int n); // miniHeapify_Prim the cost
+pair<int, int> removeMini_Prim(); // remove the minimum vertice from the heap
+void printCost_Prim(); // print heap of current status
+void printSolution_Prim(); // print final solution
+
+void kruskal(); // minimum Spanning tree using kruskal algorithm
+int find_Kruskal(int vertice); // find the root of given vertice
+void union_Kruskal(int v, int u); // union two separate graphs
+void printEdges_Kruskal(); // print all edges in ascending order
+void printSolution_Kruskal(); // print solution in ascending order
+
+int main() {
   execute();
   return 0;
 }
 
 // implementation of functions
-
 void execute() {
   srand(time(NULL));
   string input = "";
@@ -53,25 +52,39 @@ void execute() {
   while (sign) {
     prepareGraph();
 
-    string algo = "_";
-    while (algo[0] != 'p' && algo[0] != 'k') {
-      cout << "Press 'p' to use prim algorithm." << endl;
-      cout << "Press 'k' to use kruskal algorithm." << endl;
-      cin.clear();
-      cin >> algo;
-      while (cin.fail()) {
-        cin.clear();
-        cin.ignore();
-        cout << "Press 'p' to use prim algorithm." << endl;
-        cout << "Press 'k' to use kruskal algorithm." << endl;
-        cin >> algo;
-      }
-    }
+    string algo = "";
+    cout << "Press 'p' to use prim algorithm." << endl;
+    cout << "Press 'k' to use kruskal algorithm." << endl;
+    cin >> algo;
     if (algo[0] == 'p') {
       prim();
     } else if (algo[0] == 'k') {
       kruskal();
+    } else {
+      while (algo[0] != 'p' && algo[0] != 'k') {
+        cout << "Error: Only p or k algorithm can be chose." << endl;
+        cout << "Press 'p' to use prim algorithm." << endl;
+        cout << "Press 'k' to use kruskal algorithm." << endl;
+        cin.clear();
+        cin >> algo;
+        while (cin.fail()) {
+          cin.clear();
+          cin.ignore();
+          cout << "Error: Only p or k algorithm can be chose." << endl;
+          cout << "Press 'p' to use prim algorithm." << endl;
+          cout << "Press 'k' to use kruskal algorithm." << endl;
+          cin >> algo;
+        }
+      }
+      if (algo[0] == 'p') {
+        prim();
+      } else if (algo[0] == 'k') {
+        kruskal();
+      }
     }
+
+    // prim();
+    // kruskal();
 
     cout << "Press any other button to continue." << endl;
     cout << "Press e to Exit." << endl;
@@ -114,6 +127,16 @@ void prepareGraph(){
   printGraph();
 }
 
+// print the graph
+void printGraph() {
+  for (int i = 0; i < graph.size(); i++){
+    for (int j = 0; j < graph.at(i).size(); j++) {
+      cout << setw(3) << setfill(' ')<< graph.at(i).at(j);
+    }
+    cout << endl;
+  }
+}
+
 // Minimum Spanning Tree
 void prim() {
   heap_v = vector<pair<int, int> >(graph.size(), pair<int, int>(0, INT_MAX));
@@ -121,15 +144,13 @@ void prim() {
   for (int i = 0; i < heap_v.size(); i ++) {
     if (i == root) {
       heap_v.at(i).second = 0;
-      pre.at(i) = -1;
     }
     heap_v.at(i).first = i;
   }
   for (int i = heap_v.size()/2; i >= 0; i--) {
     miniHeapify_Prim(i, heap_v.size());
   }
-  printCost_Prim();
-  printTree_Prim();
+
   // for each v not in the tree
   while (heap_v.size() != 0) {
     printCost_Prim();
@@ -149,7 +170,7 @@ void prim() {
       }
     }
   }
-  printTree_Prim();
+  printSolution_Prim();
 }
 
 // miniHeapify_Prim cost
@@ -183,6 +204,29 @@ pair<int, int> removeMini_Prim() {
   return mini;
 }
 
+// print cost
+void printCost_Prim() {
+  cout << "Heap: " << endl;
+  for (int i = 0; i < heap_v.size(); i++) {
+    cout << "vertice: " << heap_v.at(i).first;
+    cout << "  cost: " << heap_v.at(i).second << endl;
+  }
+  cout << endl;
+}
+
+// print prim Solution
+void printSolution_Prim() {
+  cout << "Prim Solution: " << endl;
+  for (int i = 0; i < pre.size(); i++) {
+    cout << "v: " << i << "    pre: "<< pre.at(i);
+    if (pre.at(i) != i) {
+      cout << "    length: " << graph.at(i).at(pre.at(i)) << endl;
+    } else {
+      cout << "    length: 0 (ROOT)" << endl;
+    }
+  }
+}
+
 // kruskal algorithm
 void kruskal(){
   struct edge edges[graph.size()*graph.size()];
@@ -205,7 +249,7 @@ void kruskal(){
   for (int i = 0; i < graph.size(); i++ ) {
     forest.push_back(i);
   }
-  printEdges_Kruskal();
+  // printEdges_Kruskal();
   int shortest = 0;
   while (shortest < weight.size()){
     int v = weight.at(shortest).v;
@@ -221,9 +265,10 @@ void kruskal(){
     }
     shortest++;
   }
-  printSolution();
+  printSolution_Kruskal();
 }
 
+// find the root of given vertice
 int find_Kruskal(int vertice) {
   int x = vertice;
   while (forest.at(x) != x) {
@@ -232,57 +277,33 @@ int find_Kruskal(int vertice) {
   return x;
 }
 
+// union two graphs
 void union_Kruskal(int v, int u) {
   int s = min(forest.at(v), forest.at(u));
   int l = max(forest.at(v), forest.at(u));
   forest.at(l) = s;
 }
 
-// print the graph
-void printGraph() {
-  for (int i = 0; i < graph.size(); i++){
-    for (int j = 0; j < graph.at(i).size(); j++) {
-      cout << setw(3) << setfill(' ')<< graph.at(i).at(j);
-    }
-    cout << endl;
-  }
-}
-
-// print cost
-void printCost_Prim() {
-  cout << "Heap: " << endl;
-  for (int i = 0; i < heap_v.size(); i++) {
-    cout << "first: " << heap_v.at(i).first;
-    cout << "  second: " << heap_v.at(i).second << endl;
-  }
-  cout << endl;
-}
-
-void printTree_Prim() {
-  cout << "Pre vertices: " << endl;
-  for (int i = 0; i < pre.size(); i++) {
-    cout << "v: " << i << "    pre: "<< pre.at(i) << endl;
-  }
-}
-
+// Kruskal print Edges
 void printEdges_Kruskal() {
   cout << "Edges: " << endl;
   for (int i = 0; i < weight.size(); i++) {
     cout << "length:" << weight.at(i).length;
-    cout << " v:" << weight.at(i).v;
-    cout << " u:" << weight.at(i).u<< endl;
+    cout << "   v:" << weight.at(i).v;
+    cout << "   u:" << weight.at(i).u<< endl;
   }
 
   cout << "=======================total:" << weight.size();
   cout << "===============================" << endl;
 }
 
-void printSolution() {
-  cout << "Solution: \n";
+// print final solution
+void printSolution_Kruskal() {
+  cout << "Kruskal Solution: " << endl;
   for (int i = 0; i < solution.size(); i++) {
-    cout << "v: " << solution.at(i).v;
-    cout << " u: " << solution.at(i).u;
-    cout << " length: " << solution.at(i).length << endl;
+    cout << "Edge   v: " << solution.at(i).v;
+    cout << "   u: " << solution.at(i).u;
+    cout << "   length: " << solution.at(i).length << endl;
   }
   cout << "=======================total:" << solution.size();
   cout << "===============================" << endl;
