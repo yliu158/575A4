@@ -5,9 +5,6 @@
 #include <vector> // heap_v pre forest etc
 #include <iomanip> // setw print in certain format
 #include <algorithm> // sort array
-#include <sstream>
-#include <fstream>
-#include <string>
 
 using namespace std;
 
@@ -27,7 +24,6 @@ vector<edge> solution; // solution of kruskal
 
 //declaration of functions
 void execute(); // all executable lines
-void getGraphFromFile();
 void prepareGraph(); // prepare the graph
 void printGraph(); // print graph using list
 
@@ -55,8 +51,6 @@ void execute() {
   bool sign = true;
   while (sign) {
     prepareGraph();
-
-    // getGraphFromFile();
 
     string algo = "";
     cout << "Press 'p' to use prim algorithm." << endl;
@@ -111,31 +105,10 @@ void execute() {
   cout << "Successfully Exited" << endl;
 }
 
-void getGraphFromFile() {
-  graph.clear();
-  ifstream file("graph.txt");
-  string str;
-  while (getline(file, str)) {
-    istringstream ss(str);
-    string num;
-    // cout << str << endl;
-    vector<int> line;
-    while (getline(ss, num, ' ')) {
-      if (num != " ") {
-        line.push_back(stoi(num));
-      }
-    }
-    graph.push_back(line);
-  }
-  printGraph();
-}
-
 // get graph prepared
 void prepareGraph(){
   int size = rand()%6+5;
-  graph.clear();
   graph = vector<vector<int> >(size, vector<int>(size));
-  pre.clear();
   pre = vector<int>();
 
   for (int i = 0; i < size; i++) {
@@ -149,12 +122,13 @@ void prepareGraph(){
       }
     }
   }
+  cout << "Graph.\n";
+
   printGraph();
 }
 
 // print the graph
 void printGraph() {
-  cout << "Graph.\n";
   for (int i = 0; i < graph.size(); i++){
     for (int j = 0; j < graph.at(i).size(); j++) {
       cout << setw(3) << setfill(' ')<< graph.at(i).at(j);
@@ -179,7 +153,7 @@ void prim() {
 
   // for each v not in the tree
   while (heap_v.size() != 0) {
-    // printCost_Prim();
+    printCost_Prim();
     pair<int, int> v = removeMini_Prim();
     // for each v not in the tree
     for (int i = 0; i < heap_v.size(); i++) {
@@ -255,8 +229,6 @@ void printSolution_Prim() {
 
 // kruskal algorithm
 void kruskal(){
-  solution.clear();
-  weight.clear();
   struct edge edges[graph.size()*graph.size()];
   int count = 0;
   for (int i = 0; i < graph.size(); i++) {
@@ -269,17 +241,15 @@ void kruskal(){
       count++;
     }
   }
-
   sort(edges, edges+count);
   for (int i = 0; i < count; i++) {
     weight.push_back(edges[i]);
   }
-  // setup the parent of each vertice
-  forest.clear();
+  // setup the parent of each graph
   for (int i = 0; i < graph.size(); i++ ) {
     forest.push_back(i);
   }
-
+  // printEdges_Kruskal();
   int shortest = 0;
   while (shortest < weight.size()){
     int v = weight.at(shortest).v;
@@ -287,18 +257,13 @@ void kruskal(){
     if (find_Kruskal(v) != find_Kruskal(u)) {
       struct edge e;
       e.length = weight.at(shortest).length;
-      e.v = v;
-      e.u = u;
+      e.v = weight.at(shortest).v;
+      e.u = weight.at(shortest).u;
       solution.push_back(e);
       union_Kruskal(v, u);
-      // if (solution.size() >= graph.size()-1) break;
+      if (solution.size() >= graph.size()-1) break;
     }
     shortest++;
-    // cout << "shortest " << shortest <<"  v: " << v << "   u:" << u << endl;
-    // for (int i = 0; i < forest.size(); i++ ) {
-    //   cout << "forest v:" << i << " "<< forest.at(i) << endl;
-    // }
-    // cout << endl;
   }
   printSolution_Kruskal();
 }
@@ -314,8 +279,8 @@ int find_Kruskal(int vertice) {
 
 // union two graphs
 void union_Kruskal(int v, int u) {
-  int s = min(find_Kruskal(v), find_Kruskal(u));
-  int l = max(find_Kruskal(v), find_Kruskal(u));
+  int s = min(forest.at(v), forest.at(u));
+  int l = max(forest.at(v), forest.at(u));
   forest.at(l) = s;
 }
 
